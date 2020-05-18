@@ -76,6 +76,20 @@ function createProgram(
   return program;
 }
 
+function createTextureFromBitmap(gl: WebGLRenderingContext, bmp: ImageBitmap) {
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set the parameters so we can render any size image.
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
+
+  return texture;
+}
+
 async function main(): Promise<void> {
   const bmp = await resizeToBounds(
     await loadImage(imgURL),
@@ -83,10 +97,17 @@ async function main(): Promise<void> {
     window.innerHeight * devicePixelRatio,
   );
 
+  const chromaBmp = await createImageBitmap(bmp, {
+    resizeWidth: bmp.width / 60,
+    resizeQuality: 'high',
+  });
+
   const canvas = document.createElement('canvas');
   document.body.append(canvas);
   canvas.width = bmp.width;
   canvas.height = bmp.height;
+  canvas.style.width = `${bmp.width / devicePixelRatio}px`;
+  canvas.style.height = `${bmp.height / devicePixelRatio}px`;
   const gl = canvas.getContext('webgl', {
     antialias: false,
     powerPreference: 'low-power',
@@ -103,11 +124,12 @@ async function main(): Promise<void> {
   const positionLocation = gl.getAttribLocation(program, 'a_position');
 
   // look up uniform locations
-  //var u_imageLoc = gl.getUniformLocation(program, 'u_image');
-  var u_matrixLoc = gl.getUniformLocation(program, 'u_matrix');
+  const lumaLoc = gl.getUniformLocation(program, 'u_luma');
+  const chromaLoc = gl.getUniformLocation(program, 'u_chroma');
+  const matrixLoc = gl.getUniformLocation(program, 'u_matrix');
 
   // provide texture coordinates for the rectangle.
-  var positionBuffer = gl.createBuffer();
+  const positionBuffer = gl.createBuffer();
   // prettier-ignore
   const rect = new Float32Array([
     0.0,  0.0,
@@ -117,21 +139,23 @@ async function main(): Promise<void> {
     1.0,  0.0,
     1.0,  1.0
   ]);
+
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, rect, gl.STATIC_DRAW);
   gl.enableVertexAttribArray(positionLocation);
   gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-  const texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+  const lumaTexture = createTextureFromBitmap(gl, bmp);
+  const chromaTexture = createTextureFromBitmap(gl, chromaBmp);
 
-  // Set the parameters so we can render any size image.
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bmp);
-  gl.uniformMatrix3fv(u_matrixLoc, false, [2, 0, 0, 0, -2, 0, -1, 1, 1]);
+  gl.uniform1i(lumaLoc, 0); // texture unit 0
+  gl.uniform1i(chromaLoc, 1); // texture unit 1
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, lumaTexture);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, chromaTexture);
+
+  gl.uniformMatrix3fv(matrixLoc, false, [2, 0, 0, 0, -2, 0, -1, 1, 1]);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
