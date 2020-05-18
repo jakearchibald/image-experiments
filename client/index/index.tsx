@@ -53,10 +53,11 @@ async function getChannel(
   resizedBmp: ImageBitmap,
   factor: number,
 ): Promise<ImageBitmap> {
+  console.log(factor, Math.ceil(resizedBmp.width * factor));
   return factor === 1
     ? resizedBmp
     : createImageBitmap(resizedBmp, {
-        resizeWidth: Math.floor(resizedBmp.width * factor),
+        resizeWidth: Math.ceil(resizedBmp.width * factor),
       });
 }
 
@@ -76,6 +77,7 @@ class App extends Component<{}, State> {
   };
 
   private _resizeTimeout: number = 0;
+  private _rangeTimeout: number = 0;
 
   private _onFileChange = async (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -116,7 +118,17 @@ class App extends Component<{}, State> {
         lumaBmp,
         chromaBmp,
       });
-    }, 500);
+    }, 100);
+  };
+
+  private _onChromaChange = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    this.setState({ chromaMulti: input.valueAsNumber });
+  };
+
+  private _onLumaChange = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    this.setState({ lumaMulti: input.valueAsNumber });
   };
 
   componentDidMount() {
@@ -127,7 +139,38 @@ class App extends Component<{}, State> {
     removeEventListener('resize', this._onResize);
   }
 
-  render({}, { resizedBmp, lumaBmp, chromaBmp }: State) {
+  componentDidUpdate(_: {}, oldState: State) {
+    const state = { ...this.state };
+
+    if (
+      state.lumaMulti !== oldState.lumaMulti ||
+      state.chromaMulti !== oldState.chromaMulti
+    ) {
+      clearTimeout(this._rangeTimeout);
+      this._rangeTimeout = setTimeout(async () => {
+        let newLuma: Promise<ImageBitmap> | undefined;
+        let newChroma: Promise<ImageBitmap> | undefined;
+
+        if (state.lumaMulti !== oldState.lumaMulti) {
+          newLuma = getChannel(state.resizedBmp!, state.lumaMulti);
+        }
+        if (state.chromaMulti !== oldState.chromaMulti) {
+          newChroma = getChannel(state.resizedBmp!, state.chromaMulti);
+        }
+
+        const newState: Partial<State> = {};
+
+        if (newLuma) newState.lumaBmp = await newLuma;
+        if (newChroma) newState.chromaBmp = await newChroma;
+        this.setState(newState);
+      }, 50);
+    }
+  }
+
+  render(
+    {},
+    { resizedBmp, lumaBmp, chromaBmp, chromaMulti, lumaMulti }: State,
+  ) {
     return (
       <div>
         {resizedBmp && lumaBmp && chromaBmp && (
@@ -139,6 +182,33 @@ class App extends Component<{}, State> {
           />
         )}
         <input type="file" onChange={this._onFileChange} />
+        <div
+          style={{
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '50px',
+            display: 'grid',
+            position: 'absolute',
+          }}
+        >
+          <input
+            type="range"
+            value={lumaMulti}
+            min={0.0001}
+            max={1}
+            step="any"
+            onInput={this._onLumaChange}
+          />
+          <input
+            type="range"
+            value={chromaMulti}
+            min={0.0001}
+            max={1}
+            step="any"
+            onInput={this._onChromaChange}
+          />
+        </div>
       </div>
     );
   }
