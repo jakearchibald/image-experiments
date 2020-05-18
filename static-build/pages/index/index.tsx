@@ -13,7 +13,7 @@
 import { h, FunctionalComponent } from 'preact';
 import pageStyles from 'css-bundle:./styles.css';
 
-import bundleURL, { imports } from 'client-bundle:client/index/index.ts';
+import bundleURL, { imports } from 'client-bundle:client/index/index.tsx';
 
 interface Props {}
 
