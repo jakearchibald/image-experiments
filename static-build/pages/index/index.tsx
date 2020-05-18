@@ -29,9 +29,7 @@ const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
           <link rel="preload" as="script" href={v} crossOrigin="" />
         ))}
       </head>
-      <body>
-        <h1>Hello</h1>
-      </body>
+      <body></body>
     </html>
   );
 };

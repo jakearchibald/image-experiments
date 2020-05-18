@@ -19,6 +19,7 @@ import clientBundlePlugin from './lib/client-bundle-plugin';
 import nodeExternalPlugin from './lib/node-external-plugin';
 import cssPlugin from './lib/css-plugin';
 import assetPlugin from './lib/asset-plugin';
+import assetStringPlugin from './lib/asset-string-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import runScript from './lib/run-script';
 
@@ -34,6 +35,7 @@ export default async function ({ watch }) {
     tsPluginInstance,
     resolveDirsPlugin(['static-build', 'client', 'tests', 'shared']),
     assetPlugin(),
+    assetStringPlugin(),
     cssPlugin(),
   ];
   const dir = '.tmp/build';
