@@ -232,7 +232,9 @@ class App extends Component<{}, State> {
             />
           )}
         </div>
-        {!hideUi && <input type="file" onChange={this._onFileChange} />}
+        {!hideUi && (
+          <input type="file" accept="image/*" onChange={this._onFileChange} />
+        )}
       </div>
     );
   }
