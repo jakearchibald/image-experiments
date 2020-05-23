@@ -21,8 +21,8 @@ const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
   return (
     <html lang="en">
       <head>
-        <title>JPEG stuff</title>
-        <meta name="description" content="TODO: JPEG stuff" />
+        <title>Channel levels</title>
+        <meta name="description" content="Change the YUV levels of an image" />
         <link rel="stylesheet" href={pageStyles} />
         <script type="module" src={bundleURL} />
         {imports.map((v) => (

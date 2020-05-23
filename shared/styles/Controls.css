@@ -1,0 +1,10 @@
+.controls {
+  padding: 20px;
+  display: grid;
+}
+
+.ranges {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content 10ch;
+  gap: 5px 10px;
+}

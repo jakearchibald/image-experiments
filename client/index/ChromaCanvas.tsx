@@ -10,10 +10,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { h, Component, createRef } from 'preact';
+
 import fragmentShaderSource from 'asset-string:./s.frag';
 import vertexShaderSource from 'asset-string:./s.vert';
-
-import { h, Component, createRef } from 'preact';
+import { $chromaCanvas } from 'shared/styles/ChromaCanvas.css';
 
 function loadShader(
   gl: WebGLRenderingContext,
@@ -180,13 +181,10 @@ export default class ChromaCanvas extends Component<Props, State> {
   render({ width, height }: Props) {
     return (
       <canvas
+        class={$chromaCanvas}
         ref={this._canvasRef}
         width={width}
         height={height}
-        style={{
-          width: `${width / devicePixelRatio}px`,
-          height: `${height / devicePixelRatio}px`,
-        }}
       />
     );
   }

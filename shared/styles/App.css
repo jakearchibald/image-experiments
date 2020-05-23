@@ -1,0 +1,33 @@
+html {
+  font-family: sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+input[type='file'] {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.app {
+  height: 100%;
+  display: grid;
+}
+
+.layout {
+  display: grid;
+  grid-template-rows: 1fr max-content;
+}
+
+.canvasContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

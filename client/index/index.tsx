@@ -10,13 +10,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, Component, render } from 'preact';
+import { h, Component, render, createRef } from 'preact';
 import ChromaCanvas from './ChromaCanvas';
-
-/*async function loadImage(url: string): Promise<ImageBitmap> {
-  const blob = await fetch(url).then((r) => r.blob());
-  return createImageBitmap(blob);
-}*/
+import Controls, { Values } from './Controls';
+import { $layout, $app, $canvasContainer } from 'shared/styles/App.css';
 
 async function resizeToBounds(
   bmp: ImageBitmap,
@@ -41,19 +38,10 @@ async function resizeToBounds(
   });
 }
 
-async function getResizedToWindow(mainBmp: ImageBitmap) {
-  return resizeToBounds(
-    mainBmp,
-    window.innerWidth * devicePixelRatio,
-    window.innerHeight * devicePixelRatio,
-  );
-}
-
 async function getChannel(
   resizedBmp: ImageBitmap,
   factor: number,
 ): Promise<ImageBitmap> {
-  console.log(factor, Math.ceil(resizedBmp.width * factor));
   return factor === 1
     ? resizedBmp
     : createImageBitmap(resizedBmp, {
@@ -73,19 +61,22 @@ interface State {
 class App extends Component<{}, State> {
   state: State = {
     lumaMulti: 1,
-    chromaMulti: 0.01,
+    chromaMulti: 0.05,
   };
 
   private _resizeTimeout: number = 0;
   private _rangeTimeout: number = 0;
+  private _canvasContainerRef = createRef<HTMLDivElement>();
 
-  private _onFileChange = async (event: Event) => {
-    const input = event.target as HTMLInputElement;
 
-    if (!input.files || !input.files[0]) return;
-
-    const mainBmp = await createImageBitmap(input.files[0]);
-    const resizedBmp = await getResizedToWindow(mainBmp);
+  private async _openFile(blob: Blob) {
+    const mainBmp = await createImageBitmap(blob);
+    const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
+    const resizedBmp = await resizeToBounds(
+      mainBmp,
+      bounds.width * devicePixelRatio,
+      bounds.height * devicePixelRatio,
+    );
 
     const [lumaBmp, chromaBmp] = await Promise.all([
       getChannel(resizedBmp, this.state.lumaMulti),
@@ -98,6 +89,12 @@ class App extends Component<{}, State> {
       lumaBmp,
       chromaBmp,
     });
+  }
+
+  private _onFileChange = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    this._openFile(input.files[0]);
   };
 
   private _onResize = () => {
@@ -106,7 +103,12 @@ class App extends Component<{}, State> {
     this._resizeTimeout = setTimeout(async () => {
       if (!this.state.mainBmp) return;
 
-      const resizedBmp = await getResizedToWindow(this.state.mainBmp);
+      const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
+      const resizedBmp = await resizeToBounds(
+        this.state.mainBmp,
+        bounds.width * devicePixelRatio,
+        bounds.height * devicePixelRatio,
+      );
 
       const [lumaBmp, chromaBmp] = await Promise.all([
         getChannel(resizedBmp, this.state.lumaMulti),
@@ -121,14 +123,11 @@ class App extends Component<{}, State> {
     }, 100);
   };
 
-  private _onChromaChange = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    this.setState({ chromaMulti: input.valueAsNumber });
-  };
-
-  private _onLumaChange = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    this.setState({ lumaMulti: input.valueAsNumber });
+  private _onControlsChange = (values: Values) => {
+    this.setState({
+      chromaMulti: values.chromaMulti,
+      lumaMulti: values.lumaMulti,
+    });
   };
 
   componentDidMount() {
@@ -172,43 +171,30 @@ class App extends Component<{}, State> {
     { resizedBmp, lumaBmp, chromaBmp, chromaMulti, lumaMulti }: State,
   ) {
     return (
-      <div>
-        {resizedBmp && lumaBmp && chromaBmp && (
-          <ChromaCanvas
-            chromaBmp={chromaBmp}
-            lumaBmp={lumaBmp}
-            width={resizedBmp.width}
-            height={resizedBmp.height}
-          />
-        )}
-        <input type="file" onChange={this._onFileChange} />
-        <div
-          style={{
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '50px',
-            display: 'grid',
-            position: 'absolute',
-          }}
-        >
-          <input
-            type="range"
-            value={lumaMulti}
-            min={0.0001}
-            max={1}
-            step="any"
-            onInput={this._onLumaChange}
-          />
-          <input
-            type="range"
-            value={chromaMulti}
-            min={0.0001}
-            max={1}
-            step="any"
-            onInput={this._onChromaChange}
+      <div class={$app}>
+        <div class={$layout}>
+          <div class={$canvasContainer} ref={this._canvasContainerRef}>
+            {resizedBmp && lumaBmp && chromaBmp && (
+              <ChromaCanvas
+                chromaBmp={chromaBmp}
+                lumaBmp={lumaBmp}
+                width={resizedBmp.width}
+                height={resizedBmp.height}
+              />
+            )}
+          </div>
+          <Controls
+            lumaMulti={lumaMulti}
+            chromaMulti={chromaMulti}
+            onChange={this._onControlsChange}
+            width={resizedBmp ? resizedBmp.width : 0}
+            height={resizedBmp ? resizedBmp.height : 0}
+            renderY
+            renderU
+            renderV
           />
         </div>
+        <input type="file" onChange={this._onFileChange} />
       </div>
     );
   }
