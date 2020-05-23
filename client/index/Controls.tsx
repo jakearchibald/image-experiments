@@ -12,14 +12,14 @@
  */
 import { h, Component, createRef } from 'preact';
 
-import { $controls, $ranges } from 'shared/styles/Controls.css';
+import { $controls, $ranges, $toggles } from 'shared/styles/Controls.css';
 
 export interface Values {
   lumaMulti: number;
   chromaMulti: number;
-  renderY: boolean;
-  renderU: boolean;
-  renderV: boolean;
+  showY: boolean;
+  showCb: boolean;
+  showCr: boolean;
 }
 
 interface Props extends Values {
@@ -29,27 +29,38 @@ interface Props extends Values {
 }
 
 export default class Controls extends Component<Props> {
-  private lumaMultiRef = createRef<HTMLInputElement>();
-  private chromaMultiRef = createRef<HTMLInputElement>();
+  private _lumaMultiRef = createRef<HTMLInputElement>();
+  private _chromaMultiRef = createRef<HTMLInputElement>();
+  private _showYRef = createRef<HTMLInputElement>();
+  private _showCbRef = createRef<HTMLInputElement>();
+  private _showCrRef = createRef<HTMLInputElement>();
 
   private _onChange = () => {
     this.props.onChange({
-      lumaMulti: this.lumaMultiRef.current!.valueAsNumber,
-      chromaMulti: this.chromaMultiRef.current!.valueAsNumber,
-      renderY: true,
-      renderU: true,
-      renderV: true,
+      lumaMulti: this._lumaMultiRef.current!.valueAsNumber,
+      chromaMulti: this._chromaMultiRef.current!.valueAsNumber,
+      showY: this._showYRef.current!.checked,
+      showCb: this._showCbRef.current!.checked,
+      showCr: this._showCrRef.current!.checked,
     });
   };
 
-  render({ lumaMulti, chromaMulti, width, height }: Props) {
+  render({
+    lumaMulti,
+    chromaMulti,
+    width,
+    height,
+    showY,
+    showCb,
+    showCr,
+  }: Props) {
     return (
       <div class={$controls}>
         <div class={$ranges}>
           <label for="luma-range">Luma: </label>
           <input
             id="luma-range"
-            ref={this.lumaMultiRef}
+            ref={this._lumaMultiRef}
             type="range"
             value={lumaMulti}
             min={0.0001}
@@ -64,7 +75,7 @@ export default class Controls extends Component<Props> {
           <label for="chroma-range">Chroma: </label>
           <input
             id="chroma-range"
-            ref={this.chromaMultiRef}
+            ref={this._chromaMultiRef}
             type="range"
             value={chromaMulti}
             min={0.0001}
@@ -76,6 +87,32 @@ export default class Controls extends Component<Props> {
           <span>
             {Math.round(width * chromaMulti)}x{Math.round(height * chromaMulti)}
           </span>
+        </div>
+        <div class={$toggles}>
+          <label for="show-y">Y</label>
+          <input
+            ref={this._showYRef}
+            id="show-y"
+            type="checkbox"
+            checked={showY}
+            onInput={this._onChange}
+          />
+          <label for="show-cb">Cb</label>
+          <input
+            ref={this._showCbRef}
+            id="show-cb"
+            type="checkbox"
+            checked={showCb}
+            onInput={this._onChange}
+          />
+          <label for="show-cr">Cr</label>
+          <input
+            ref={this._showCrRef}
+            id="show-cr"
+            type="checkbox"
+            checked={showCr}
+            onInput={this._onChange}
+          />
         </div>
       </div>
     );

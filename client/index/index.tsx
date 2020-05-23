@@ -14,6 +14,7 @@ import { h, Component, render, createRef } from 'preact';
 import ChromaCanvas from './ChromaCanvas';
 import Controls, { Values } from './Controls';
 import { $layout, $app, $canvasContainer } from 'shared/styles/App.css';
+//import testImg from 'asset-url:./img.jpg';
 
 async function resizeToBounds(
   bmp: ImageBitmap,
@@ -56,18 +57,30 @@ interface State {
   chromaBmp?: ImageBitmap;
   lumaMulti: number;
   chromaMulti: number;
+  showY: boolean;
+  showCb: boolean;
+  showCr: boolean;
 }
 
 class App extends Component<{}, State> {
   state: State = {
     lumaMulti: 1,
     chromaMulti: 0.05,
+    showY: true,
+    showCb: true,
+    showCr: true,
   };
 
   private _resizeTimeout: number = 0;
   private _rangeTimeout: number = 0;
   private _canvasContainerRef = createRef<HTMLDivElement>();
 
+  /*constructor() {
+    super();
+    fetch(testImg)
+      .then((r) => r.blob())
+      .then((blob) => this._openFile(blob));
+  }*/
 
   private async _openFile(blob: Blob) {
     const mainBmp = await createImageBitmap(blob);
@@ -127,6 +140,9 @@ class App extends Component<{}, State> {
     this.setState({
       chromaMulti: values.chromaMulti,
       lumaMulti: values.lumaMulti,
+      showY: values.showY,
+      showCb: values.showCb,
+      showCr: values.showCr,
     });
   };
 
@@ -168,7 +184,16 @@ class App extends Component<{}, State> {
 
   render(
     {},
-    { resizedBmp, lumaBmp, chromaBmp, chromaMulti, lumaMulti }: State,
+    {
+      resizedBmp,
+      lumaBmp,
+      chromaBmp,
+      chromaMulti,
+      lumaMulti,
+      showY,
+      showCb,
+      showCr,
+    }: State,
   ) {
     return (
       <div class={$app}>
@@ -180,6 +205,9 @@ class App extends Component<{}, State> {
                 lumaBmp={lumaBmp}
                 width={resizedBmp.width}
                 height={resizedBmp.height}
+                showY={showY}
+                showCb={showCb}
+                showCr={showCr}
               />
             )}
           </div>
@@ -189,9 +217,9 @@ class App extends Component<{}, State> {
             onChange={this._onControlsChange}
             width={resizedBmp ? resizedBmp.width : 0}
             height={resizedBmp ? resizedBmp.height : 0}
-            renderY
-            renderU
-            renderV
+            showY={showY}
+            showCb={showCb}
+            showCr={showCr}
           />
         </div>
         <input type="file" onChange={this._onFileChange} />

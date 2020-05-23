@@ -69,6 +69,9 @@ interface Props {
   height: number;
   lumaBmp: ImageBitmap;
   chromaBmp: ImageBitmap;
+  showY: boolean;
+  showCr: boolean;
+  showCb: boolean;
 }
 
 interface State {}
@@ -78,6 +81,9 @@ export default class ChromaCanvas extends Component<Props, State> {
   private _gl: WebGLRenderingContext | undefined;
   private _lumaTexture: WebGLTexture | undefined;
   private _chromaTexture: WebGLTexture | undefined;
+  private _showYLoc: WebGLUniformLocation | undefined;
+  private _showCbLoc: WebGLUniformLocation | undefined;
+  private _showCrLoc: WebGLUniformLocation | undefined;
 
   private _setup() {
     const gl = this._canvasRef.current!.getContext('webgl', {
@@ -103,6 +109,10 @@ export default class ChromaCanvas extends Component<Props, State> {
     const chromaLoc = gl.getUniformLocation(program, 'u_chroma');
     gl.uniform1i(chromaLoc, 1); // texture unit 1
     const matrixLoc = gl.getUniformLocation(program, 'u_matrix');
+    // Options
+    this._showYLoc = gl.getUniformLocation(program, 'showY')!;
+    this._showCbLoc = gl.getUniformLocation(program, 'showCb')!;
+    this._showCrLoc = gl.getUniformLocation(program, 'showCr')!;
 
     // provide texture coordinates for the rectangle.
     const positionBuffer = gl.createBuffer();
@@ -121,6 +131,9 @@ export default class ChromaCanvas extends Component<Props, State> {
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
     gl.uniformMatrix3fv(matrixLoc, false, [2, 0, 0, 0, -2, 0, -1, 1, 1]);
+    gl.uniform1f(this._showYLoc, Number(this.props.showY));
+    gl.uniform1f(this._showCbLoc, Number(this.props.showCb));
+    gl.uniform1f(this._showCrLoc, Number(this.props.showCr));
   }
 
   private _updateLuma() {
@@ -173,6 +186,18 @@ export default class ChromaCanvas extends Component<Props, State> {
     if (previousProps.lumaBmp !== this.props.lumaBmp) {
       redraw = true;
       this._updateLuma();
+    }
+    if (previousProps.showY !== this.props.showY) {
+      this._gl!.uniform1f(this._showYLoc!, Number(this.props.showY));
+      redraw = true;
+    }
+    if (previousProps.showCb !== this.props.showCb) {
+      this._gl!.uniform1f(this._showCbLoc!, Number(this.props.showCb));
+      redraw = true;
+    }
+    if (previousProps.showCr !== this.props.showCr) {
+      this._gl!.uniform1f(this._showCrLoc!, Number(this.props.showCr));
+      redraw = true;
     }
 
     if (redraw) this._draw();

@@ -1,10 +1,22 @@
 .controls {
   padding: 20px;
   display: grid;
+  grid-template-columns: 1fr max-content;
+  gap: 10px;
 }
 
 .ranges {
   display: grid;
-  grid-template-columns: max-content 1fr max-content 10ch;
+  grid-template-columns: max-content 1fr max-content 11ch;
   gap: 5px 10px;
+}
+
+.toggles {
+  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: max-content max-content;
+  grid-auto-flow: column;
+  gap: 3px 2px;
+  align-self: center;
 }
