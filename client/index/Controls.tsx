@@ -12,7 +12,12 @@
  */
 import { h, Component, createRef } from 'preact';
 
-import { $controls, $ranges, $toggles } from 'shared/styles/Controls.css';
+import {
+  $controls,
+  $ranges,
+  $toggles,
+  $multiplier,
+} from 'shared/styles/Controls.css';
 
 export interface Values {
   lumaMulti: number;
@@ -68,7 +73,7 @@ export default class Controls extends Component<Props> {
             step="any"
             onInput={this._onChange}
           />
-          <span>{lumaMulti.toFixed(3)}</span>
+          <span class={$multiplier}>{lumaMulti.toFixed(3)}</span>
           <span>
             {Math.round(width * lumaMulti)}x{Math.round(height * lumaMulti)}
           </span>
@@ -83,7 +88,7 @@ export default class Controls extends Component<Props> {
             step="any"
             onInput={this._onChange}
           />
-          <span>{chromaMulti.toFixed(3)}</span>
+          <span class={$multiplier}>{chromaMulti.toFixed(3)}</span>
           <span>
             {Math.round(width * chromaMulti)}x{Math.round(height * chromaMulti)}
           </span>

@@ -1,14 +1,29 @@
 .controls {
   padding: 20px;
   display: grid;
-  grid-template-columns: 1fr max-content;
   gap: 10px;
+
+  @media (min-width: 500px) {
+    grid-template-columns: 1fr max-content;
+  }
 }
 
 .ranges {
   display: grid;
-  grid-template-columns: max-content 1fr max-content 11ch;
+  grid-template-columns: max-content 1fr 7ch;
   gap: 5px 10px;
+
+  @media (min-width: 500px) {
+    grid-template-columns: max-content 1fr max-content 11ch;
+  }
+}
+
+.multiplier {
+  display: none;
+
+  @media (min-width: 500px) {
+    display: block;
+  }
 }
 
 .toggles {
@@ -19,4 +34,5 @@
   grid-auto-flow: column;
   gap: 3px 2px;
   align-self: center;
+  justify-self: center;
 }

@@ -22,6 +22,7 @@ const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
     <html lang="en">
       <head>
         <title>Channel levels</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0" />
         <meta name="description" content="Change the YUV levels of an image" />
         <link rel="stylesheet" href={pageStyles} />
         <script type="module" src={bundleURL} />
