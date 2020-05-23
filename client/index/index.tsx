@@ -14,7 +14,13 @@ import { h, Component, render, createRef } from 'preact';
 import ChromaCanvas from './ChromaCanvas';
 import Controls, { Values } from './Controls';
 import { $layout, $app, $canvasContainer } from 'shared/styles/App.css';
-//import testImg from 'asset-url:./img.jpg';
+import demoImg from 'asset-url:./img.jpg';
+
+const urlParams = new URLSearchParams(location.search);
+const hideUi = urlParams.get('hideUi') === '1';
+const loadDemo = urlParams.get('demo') === '1';
+const lumaDefault = Number(urlParams.get('l')) || 1;
+const chromaDefault = Number(urlParams.get('uv')) || 0.1;
 
 async function resizeToBounds(
   bmp: ImageBitmap,
@@ -64,8 +70,8 @@ interface State {
 
 class App extends Component<{}, State> {
   state: State = {
-    lumaMulti: 1,
-    chromaMulti: 0.05,
+    lumaMulti: lumaDefault,
+    chromaMulti: chromaDefault,
     showY: true,
     showCb: true,
     showCr: true,
@@ -75,12 +81,14 @@ class App extends Component<{}, State> {
   private _rangeTimeout: number = 0;
   private _canvasContainerRef = createRef<HTMLDivElement>();
 
-  /*constructor() {
+  constructor() {
     super();
-    fetch(testImg)
-      .then((r) => r.blob())
-      .then((blob) => this._openFile(blob));
-  }*/
+    if (loadDemo) {
+      fetch(demoImg)
+        .then((r) => r.blob())
+        .then((blob) => this._openFile(blob));
+    }
+  }
 
   private async _openFile(blob: Blob) {
     const mainBmp = await createImageBitmap(blob);
@@ -211,18 +219,20 @@ class App extends Component<{}, State> {
               />
             )}
           </div>
-          <Controls
-            lumaMulti={lumaMulti}
-            chromaMulti={chromaMulti}
-            onChange={this._onControlsChange}
-            width={resizedBmp ? resizedBmp.width : 0}
-            height={resizedBmp ? resizedBmp.height : 0}
-            showY={showY}
-            showCb={showCb}
-            showCr={showCr}
-          />
+          {!hideUi && (
+            <Controls
+              lumaMulti={lumaMulti}
+              chromaMulti={chromaMulti}
+              onChange={this._onControlsChange}
+              width={resizedBmp ? resizedBmp.width : 0}
+              height={resizedBmp ? resizedBmp.height : 0}
+              showY={showY}
+              showCb={showCb}
+              showCr={showCr}
+            />
+          )}
         </div>
-        <input type="file" onChange={this._onFileChange} />
+        {!hideUi && <input type="file" onChange={this._onFileChange} />}
       </div>
     );
   }
