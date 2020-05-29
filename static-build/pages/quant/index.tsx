@@ -13,17 +13,17 @@
 import { h, FunctionalComponent } from 'preact';
 import pageStyles from 'css-bundle:./styles.css';
 
-import bundleURL, { imports } from 'client-bundle:client/index/index.tsx';
+import bundleURL, { imports } from 'client-bundle:client/quant/index.tsx';
 
 interface Props {}
 
-const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
+const QuantPage: FunctionalComponent<Props> = ({}: Props) => {
   return (
     <html lang="en">
       <head>
-        <title>Channel levels</title>
+        <title>Quantisation</title>
         <meta name="viewport" content="width=device-width, minimum-scale=1.0" />
-        <meta name="description" content="Change the YUV levels of an image" />
+        <meta name="description" content="How quantisation works" />
         <link rel="stylesheet" href={pageStyles} />
         <script type="module" src={bundleURL} />
         {imports.map((v) => (
@@ -35,4 +35,4 @@ const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
   );
 };
 
-export default IndexPage;
+export default QuantPage;

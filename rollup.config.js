@@ -24,7 +24,12 @@ import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import runScript from './lib/run-script';
 
 function resolveFileUrl({ fileName }) {
-  return JSON.stringify(fileName.replace(/^static\//, ''));
+  return JSON.stringify(
+    fileName.replace(
+      /^static\//,
+      process.env.NODE_ENV === 'production' ? '/image-experiments/' : '/',
+    ),
+  );
 }
 
 export default async function ({ watch }) {

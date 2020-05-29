@@ -10,18 +10,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h } from 'preact';
-
-import { renderPage, writeFiles } from './utils';
-import ChannelsIndex from './pages/channels/index';
-import QuantPage from './pages/quant';
-
-interface Output {
-  [outputPath: string]: string;
-}
-const toOutput: Output = {
-  'channels/index.html': renderPage(<ChannelsIndex />),
-  'quant/index.html': renderPage(<QuantPage />),
-};
-
-writeFiles(toOutput);
+console.log('yo');

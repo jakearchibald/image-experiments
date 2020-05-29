@@ -14,7 +14,7 @@ import { h, Component, createRef } from 'preact';
 
 import fragmentShaderSource from 'asset-string:./s.frag';
 import vertexShaderSource from 'asset-string:./s.vert';
-import { $chromaCanvas } from 'shared/styles/ChromaCanvas.css';
+import { $chromaCanvas } from 'shared/channels-styles/ChromaCanvas.css';
 
 function loadShader(
   gl: WebGLRenderingContext,

@@ -18,7 +18,7 @@ import {
   $toggles,
   $multiplier,
   $data,
-} from 'shared/styles/Controls.css';
+} from 'shared/channels-styles/Controls.css';
 
 export interface Values {
   lumaMulti: number;

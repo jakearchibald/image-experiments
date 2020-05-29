@@ -13,7 +13,11 @@
 import { h, Component, render, createRef } from 'preact';
 import ChromaCanvas from './ChromaCanvas';
 import Controls, { Values } from './Controls';
-import { $layout, $app, $canvasContainer } from 'shared/styles/App.css';
+import {
+  $layout,
+  $app,
+  $canvasContainer,
+} from 'shared/channels-styles/App.css';
 import demoImg from 'asset-url:./img.jpg';
 
 const urlParams = new URLSearchParams(location.search);
