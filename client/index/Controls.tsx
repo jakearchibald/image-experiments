@@ -17,6 +17,7 @@ import {
   $ranges,
   $toggles,
   $multiplier,
+  $data,
 } from 'shared/styles/Controls.css';
 
 export interface Values {
@@ -73,7 +74,8 @@ export default class Controls extends Component<Props> {
             step="any"
             onInput={this._onChange}
           />
-          <span class={$multiplier}>{lumaMulti.toFixed(3)}</span>
+          <span class={$multiplier}>{lumaMulti.toFixed(2)}x</span>
+          <span class={$data}>{(lumaMulti * lumaMulti).toFixed(3)}x²</span>
           <span>
             {Math.round(width * lumaMulti)}x{Math.round(height * lumaMulti)}
           </span>
@@ -88,7 +90,8 @@ export default class Controls extends Component<Props> {
             step="any"
             onInput={this._onChange}
           />
-          <span class={$multiplier}>{chromaMulti.toFixed(3)}</span>
+          <span class={$multiplier}>{chromaMulti.toFixed(2)}x</span>
+          <span class={$data}>{(chromaMulti * chromaMulti).toFixed(3)}x²</span>
           <span>
             {Math.round(width * chromaMulti)}x{Math.round(height * chromaMulti)}
           </span>

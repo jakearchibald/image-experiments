@@ -3,7 +3,7 @@
   display: grid;
   gap: 10px;
 
-  @media (min-width: 500px) {
+  @media (min-width: 560px) {
     grid-template-columns: 1fr max-content;
   }
 }
@@ -13,15 +13,16 @@
   grid-template-columns: max-content 1fr 7ch;
   gap: 5px 10px;
 
-  @media (min-width: 500px) {
-    grid-template-columns: max-content 1fr max-content 11ch;
+  @media (min-width: 560px) {
+    grid-template-columns: max-content 1fr max-content max-content 11ch;
   }
 }
 
-.multiplier {
+.multiplier,
+.data {
   display: none;
 
-  @media (min-width: 500px) {
+  @media (min-width: 560px) {
     display: block;
   }
 }
