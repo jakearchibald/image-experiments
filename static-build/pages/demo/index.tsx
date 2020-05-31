@@ -10,22 +10,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h } from 'preact';
+import { h, FunctionalComponent } from 'preact';
+import pageStyles from 'css-bundle:./styles.css';
 
-import { renderPage, writeFiles } from './utils';
-import ChannelsIndex from './pages/channels/index';
-import QuantPage from './pages/quant';
-import AlteredPage from './pages/altered';
-import DemoPage from './pages/demo';
+interface Props {}
 
-interface Output {
-  [outputPath: string]: string;
-}
-const toOutput: Output = {
-  'channels/index.html': renderPage(<ChannelsIndex />),
-  'quant/index.html': renderPage(<QuantPage />),
-  'altered/index.html': renderPage(<AlteredPage />),
-  'demo/index.html': renderPage(<DemoPage />),
+const DemoPage: FunctionalComponent<Props> = ({}: Props) => {
+  return (
+    <html lang="en">
+      <head>
+        <title>Altered image</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0" />
+        <link rel="stylesheet" href={pageStyles} />
+      </head>
+      <body>
+        <iframe src="../channels/?demo=lane&amp;uv=.05&amp;hideUi=1" />
+      </body>
+    </html>
+  );
 };
 
-writeFiles(toOutput);
+export default DemoPage;

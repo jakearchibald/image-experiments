@@ -10,22 +10,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h } from 'preact';
-
-import { renderPage, writeFiles } from './utils';
-import ChannelsIndex from './pages/channels/index';
-import QuantPage from './pages/quant';
-import AlteredPage from './pages/altered';
-import DemoPage from './pages/demo';
-
-interface Output {
-  [outputPath: string]: string;
-}
-const toOutput: Output = {
-  'channels/index.html': renderPage(<ChannelsIndex />),
-  'quant/index.html': renderPage(<QuantPage />),
-  'altered/index.html': renderPage(<AlteredPage />),
-  'demo/index.html': renderPage(<DemoPage />),
-};
-
-writeFiles(toOutput);
+export { default as f1 } from 'asset-url:./f1.jpg';
+export { default as lane } from 'asset-url:./lane.jpg';
+export { default as woods } from 'asset-url:./woods.jpg';

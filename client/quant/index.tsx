@@ -13,8 +13,7 @@
 import { h, Component, render, Fragment } from 'preact';
 import http203Img from 'asset-url:./203.webp';
 import curveImg from 'asset-url:./curve.webp';
-import woodsImg from 'asset-url:../woods.jpg';
-import f1Img from 'asset-url:../f1.jpg';
+import * as demoImages from '../imgs';
 import BlockRender from './BlockRender';
 import CompressedBlockRender from './CompressedBlockRender';
 import { $images, $app, $phases, $phase } from 'shared/quant-styles/App.css';
@@ -26,8 +25,7 @@ const params = new URLSearchParams(location.search);
 const demo = new Map<string, string>([
   ['203', http203Img],
   ['curve', curveImg],
-  ['woods', woodsImg],
-  ['f1', f1Img],
+  ...Object.entries(demoImages),
 ]);
 
 const initalImage = demo.get(params.get('demo') || '');

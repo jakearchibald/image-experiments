@@ -18,14 +18,9 @@ import {
   $app,
   $canvasContainer,
 } from 'shared/channels-styles/App.css';
-import woodsImg from 'asset-url:../woods.jpg';
-import f1Img from 'asset-url:../f1.jpg';
+import * as demoImages from '../imgs';
 
-const demos = new Map<string, string>([
-  ['woods', woodsImg],
-  ['f1', f1Img],
-]);
-
+const demos = new Map<string, string>(Object.entries(demoImages));
 const urlParams = new URLSearchParams(location.search);
 const hideUi = urlParams.get('hideUi') === '1';
 const demoImg = demos.get(urlParams.get('demo') || '');
