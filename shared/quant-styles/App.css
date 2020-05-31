@@ -1,0 +1,51 @@
+html {
+  font-family: sans-serif;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+.app {
+  display: grid;
+  grid-auto-rows: max-content;
+  gap: 20px;
+  padding: 20px;
+}
+
+.images {
+  display: grid;
+  height: 380px;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  img {
+    image-rendering: pixelated;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.phases {
+  --size: 63px;
+  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--size));
+  grid-auto-rows: var(--size);
+  justify-content: center;
+}
+
+.phase {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  color: #fff;
+
+  & > * {
+    position: relative;
+    grid-area: 1/1;
+  }
+}

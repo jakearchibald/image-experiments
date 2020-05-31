@@ -1,0 +1,8 @@
+.controls {
+}
+
+.ranges {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 5px 10px;
+}

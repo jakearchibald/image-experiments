@@ -1,0 +1,19 @@
+.imageSelect {
+  position: relative;
+}
+
+.canvas {
+  image-rendering: pixelated;
+}
+
+.select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transform: scale(var(--scale, 4));
+  outline: 1px solid #fff;
+  box-shadow: 0 0px 8px 1px #000;
+  width: 8px;
+  height: 8px;
+}
