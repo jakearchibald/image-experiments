@@ -25,7 +25,12 @@ const AlteredPage: FunctionalComponent<Props> = ({}: Props) => {
         <link rel="stylesheet" href={pageStyles} />
       </head>
       <body>
-        <img src={imgURL} width="1920" height="1080" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.body.addEventListener('load', ({target}) => target.style.opacity = 1, true)`,
+          }}
+        ></script>
+        <img src={imgURL} width="1920" height="1080" style={{ opacity: 0 }} />
       </body>
     </html>
   );
