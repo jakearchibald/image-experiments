@@ -13,6 +13,8 @@
 import { h, Component, render, Fragment } from 'preact';
 import http203Img from 'asset-url:./203.webp';
 import curveImg from 'asset-url:./curve.webp';
+import woodsImg from 'asset-url:../woods.jpg';
+import f1Img from 'asset-url:../f1.jpg';
 import BlockRender from './BlockRender';
 import CompressedBlockRender from './CompressedBlockRender';
 import { $images, $app, $phases, $phase } from 'shared/quant-styles/App.css';
@@ -21,11 +23,14 @@ import { dct, initQuantTables, inverseZigZag } from './jpeg-tools';
 import ImageSelect from './ImageSelect';
 
 const params = new URLSearchParams(location.search);
-const demoImgs = new Map<string, string>([
+const demo = new Map<string, string>([
   ['203', http203Img],
   ['curve', curveImg],
+  ['woods', woodsImg],
+  ['f1', f1Img],
 ]);
-const initalImage = demoImgs.get(params.get('demo') || '');
+
+const initalImage = demo.get(params.get('demo') || '');
 
 interface State {
   selectingImage?: ImageBitmap;
@@ -73,6 +78,14 @@ class App extends Component<{}, State> {
 
   private async _openFile(blob: Blob) {
     const bmp = await createImageBitmap(blob);
+
+    if (bmp.width > 8 || bmp.height > 8) {
+      this.setState({
+        selectingImage: bmp,
+      });
+      return;
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 8;
     const ctx = canvas.getContext('2d')!;

@@ -10,20 +10,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h } from 'preact';
+import { h, FunctionalComponent } from 'preact';
+import pageStyles from 'css-bundle:./styles.css';
+import imgURL from 'asset-url:./altered.jpg';
 
-import { renderPage, writeFiles } from './utils';
-import ChannelsIndex from './pages/channels/index';
-import QuantPage from './pages/quant';
-import AlteredPage from './pages/altered';
+interface Props {}
 
-interface Output {
-  [outputPath: string]: string;
-}
-const toOutput: Output = {
-  'channels/index.html': renderPage(<ChannelsIndex />),
-  'quant/index.html': renderPage(<QuantPage />),
-  'altered/index.html': renderPage(<AlteredPage />),
+const AlteredPage: FunctionalComponent<Props> = ({}: Props) => {
+  return (
+    <html lang="en">
+      <head>
+        <title>Altered image</title>
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0" />
+        <link rel="stylesheet" href={pageStyles} />
+      </head>
+      <body>
+        <img src={imgURL} width="1920" height="1080" />
+      </body>
+    </html>
+  );
 };
 
-writeFiles(toOutput);
+export default AlteredPage;

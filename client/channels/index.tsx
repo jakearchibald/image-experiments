@@ -18,11 +18,17 @@ import {
   $app,
   $canvasContainer,
 } from 'shared/channels-styles/App.css';
-import demoImg from 'asset-url:./img.jpg';
+import woodsImg from 'asset-url:../woods.jpg';
+import f1Img from 'asset-url:../f1.jpg';
+
+const demos = new Map<string, string>([
+  ['woods', woodsImg],
+  ['f1', f1Img],
+]);
 
 const urlParams = new URLSearchParams(location.search);
 const hideUi = urlParams.get('hideUi') === '1';
-const loadDemo = urlParams.get('demo') === '1';
+const demoImg = demos.get(urlParams.get('demo') || '');
 const lumaDefault = Number(urlParams.get('l')) || 1;
 const chromaDefault = Number(urlParams.get('uv')) || 0.1;
 
@@ -87,7 +93,7 @@ class App extends Component<{}, State> {
 
   constructor() {
     super();
-    if (loadDemo) {
+    if (demoImg) {
       fetch(demoImg)
         .then((r) => r.blob())
         .then((blob) => this._openFile(blob));
