@@ -197,7 +197,7 @@ class App extends Component<{}, State> {
         if (newLuma) newState.lumaBmp = await newLuma;
         if (newChroma) newState.chromaBmp = await newChroma;
         this.setState(newState);
-      }, 50);
+      }, 20);
     }
   }
 
