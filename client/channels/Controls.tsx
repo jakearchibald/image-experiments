@@ -77,7 +77,8 @@ export default class Controls extends Component<Props> {
           <span class={$multiplier}>{lumaMulti.toFixed(2)}x</span>
           <span class={$data}>{(lumaMulti * lumaMulti).toFixed(3)}x²</span>
           <span>
-            {Math.round(width * lumaMulti)}x{Math.round(height * lumaMulti)}
+            {Math.round(width * lumaMulti) || 1}x
+            {Math.round(height * lumaMulti) || 1}
           </span>
           <label for="chroma-range">Chroma: </label>
           <input
@@ -93,7 +94,8 @@ export default class Controls extends Component<Props> {
           <span class={$multiplier}>{chromaMulti.toFixed(2)}x</span>
           <span class={$data}>{(chromaMulti * chromaMulti).toFixed(3)}x²</span>
           <span>
-            {Math.round(width * chromaMulti)}x{Math.round(height * chromaMulti)}
+            {Math.round(width * chromaMulti) || 1}x
+            {Math.round(height * chromaMulti) || 1}
           </span>
         </div>
         <div class={$toggles}>

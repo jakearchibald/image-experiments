@@ -16,6 +16,8 @@ import fragmentShaderSource from 'asset-string:./s.frag';
 import vertexShaderSource from 'asset-string:./s.vert';
 import { $chromaCanvas } from 'shared/channels-styles/ChromaCanvas.css';
 
+export type Canvasable = HTMLImageElement | HTMLCanvasElement | ImageBitmap;
+
 function loadShader(
   gl: WebGLRenderingContext,
   source: string,
@@ -50,7 +52,7 @@ function createProgram(
   return program;
 }
 
-function createTextureFromBitmap(gl: WebGLRenderingContext, bmp: ImageBitmap) {
+function createTextureFromBitmap(gl: WebGLRenderingContext, bmp: Canvasable) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -67,8 +69,8 @@ function createTextureFromBitmap(gl: WebGLRenderingContext, bmp: ImageBitmap) {
 interface Props {
   width: number;
   height: number;
-  lumaBmp: ImageBitmap;
-  chromaBmp: ImageBitmap;
+  lumaBmp: Canvasable;
+  chromaBmp: Canvasable;
   showY: boolean;
   showCr: boolean;
   showCb: boolean;

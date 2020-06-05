@@ -11,6 +11,8 @@
  * limitations under the License.
  */
 import { h, Component, render, Fragment } from 'preact';
+import '../file-drop';
+import { FileDropEvent } from '../file-drop';
 import http203Img from 'asset-url:./203.webp';
 import curveImg from 'asset-url:./curve.webp';
 import * as demoImages from '../imgs';
@@ -114,12 +116,16 @@ class App extends Component<{}, State> {
     this._loadImage(data);
   };
 
+  private _onDrop = (event: FileDropEvent) => {
+    this._openFile(event.files[0]);
+  };
+
   render(
     {},
     { data, quality, phase, dctData, decodeTable, selectingImage }: State,
   ) {
     return (
-      <div class={$app}>
+      <file-drop class={$app} accept="image/*" onfiledrop={this._onDrop}>
         {!data && !selectingImage ? (
           <input type="file" accept="image/*" onChange={this._onFileChange} />
         ) : selectingImage ? (
@@ -155,7 +161,7 @@ class App extends Component<{}, State> {
             />
           </Fragment>
         )}
-      </div>
+      </file-drop>
     );
   }
 }

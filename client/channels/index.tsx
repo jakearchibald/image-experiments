@@ -12,7 +12,7 @@
  */
 import '../file-drop';
 import { h, Component, render, createRef } from 'preact';
-import ChromaCanvas from './ChromaCanvas';
+import ChromaCanvas, { Canvasable } from './ChromaCanvas';
 import Controls, { Values } from './Controls';
 import {
   $layout,
@@ -29,45 +29,125 @@ const demoImg = demos.get(urlParams.get('demo') || '');
 const lumaDefault = Number(urlParams.get('l')) || 1;
 const chromaDefault = Number(urlParams.get('uv')) || 0.1;
 
-async function resizeToBounds(
-  bmp: ImageBitmap,
+const supportsCreateImageBitmapResize = (async () => {
+  let readWidth = false;
+  const options = {
+    get resizeWidth() {
+      readWidth = true;
+      return 1;
+    },
+  };
+  try {
+    await createImageBitmap(new ImageData(2, 2), options);
+    return readWidth;
+  } catch {
+    return false;
+  }
+})();
+
+async function decodeImage(url: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = url;
+  await img.decode();
+  return img;
+}
+
+async function blobToImg(blob: Blob): Promise<HTMLImageElement | ImageBitmap> {
+  if ('createImageBitmap' in window) {
+    return createImageBitmap(blob);
+  }
+
+  const url = URL.createObjectURL(blob);
+
+  try {
+    return await decodeImage(url);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+interface ResizeOptions {
+  width?: number;
+  height?: number;
+}
+
+async function resize(
+  bmp: Canvasable,
+  { width, height }: ResizeOptions = {},
+): Promise<ImageBitmap | HTMLCanvasElement> {
+  // Happy path (Chrome)
+  if (await supportsCreateImageBitmapResize) {
+    if (width !== undefined) {
+      return createImageBitmap(bmp, {
+        resizeWidth: Math.round(width) || 1,
+        resizeQuality: 'high',
+      });
+    } else if (height !== undefined) {
+      return createImageBitmap(bmp, {
+        resizeHeight: Math.round(height) || 1,
+        resizeQuality: 'high',
+      });
+    } else {
+      throw Error('Must specify width or height');
+    }
+  }
+
+  // Sad path
+  let targetWidth: number;
+  let targetHeight: number;
+
+  if (width !== undefined) {
+    targetWidth = Math.round(width) || 1;
+    targetHeight = Math.round((bmp.height * width) / bmp.width) || 1;
+  } else if (height !== undefined) {
+    targetHeight = Math.round(height) || 1;
+    targetWidth = Math.round((bmp.width * height) / bmp.height) || 1;
+  } else {
+    throw Error('Must specify width or height');
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bmp, 0, 0, targetWidth, targetHeight);
+  return canvas;
+}
+
+async function resizeToBounds<T extends Canvasable>(
+  bmp: T,
   width: number,
   height: number,
-): Promise<ImageBitmap> {
+): Promise<ImageBitmap | HTMLCanvasElement | T> {
   if (bmp.width <= width && bmp.height <= height) return bmp;
 
   const imgRatio = bmp.width / bmp.height;
   const boundRatio = width / height;
 
   if (imgRatio > boundRatio) {
-    return createImageBitmap(bmp, {
-      resizeWidth: width,
-      resizeQuality: 'high',
-    });
+    return resize(bmp, { width });
   }
 
-  return createImageBitmap(bmp, {
-    resizeHeight: height,
-    resizeQuality: 'high',
-  });
+  return resize(bmp, { height });
 }
 
 async function getChannel(
-  resizedBmp: ImageBitmap,
+  resizedBmp: Canvasable,
   factor: number,
-): Promise<ImageBitmap> {
+): Promise<Canvasable> {
   return factor === 1
     ? resizedBmp
-    : createImageBitmap(resizedBmp, {
-        resizeWidth: Math.ceil(resizedBmp.width * factor),
-      });
+    : resize(resizedBmp, { width: resizedBmp.width * factor });
 }
 
 interface State {
-  mainBmp?: ImageBitmap;
-  resizedBmp?: ImageBitmap;
-  lumaBmp?: ImageBitmap;
-  chromaBmp?: ImageBitmap;
+  mainBmp?: Canvasable;
+  resizedBmp?: Canvasable;
+  lumaBmp?: Canvasable;
+  chromaBmp?: Canvasable;
   lumaMulti: number;
   chromaMulti: number;
   showY: boolean;
@@ -98,7 +178,7 @@ class App extends Component<{}, State> {
   }
 
   private async _openFile(blob: Blob) {
-    const mainBmp = await createImageBitmap(blob);
+    const mainBmp = await blobToImg(blob);
     const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
     const resizedBmp = await resizeToBounds(
       mainBmp,
@@ -125,7 +205,7 @@ class App extends Component<{}, State> {
     this._openFile(input.files[0]);
   };
 
-  private _onDrop = async (event: FileDropEvent) => {
+  private _onDrop = (event: FileDropEvent) => {
     this._openFile(event.files[0]);
   };
 
@@ -182,8 +262,8 @@ class App extends Component<{}, State> {
     ) {
       clearTimeout(this._rangeTimeout);
       this._rangeTimeout = setTimeout(async () => {
-        let newLuma: Promise<ImageBitmap> | undefined;
-        let newChroma: Promise<ImageBitmap> | undefined;
+        let newLuma: ReturnType<typeof getChannel> | undefined;
+        let newChroma: ReturnType<typeof getChannel> | undefined;
 
         if (state.lumaMulti !== oldState.lumaMulti) {
           newLuma = getChannel(state.resizedBmp!, state.lumaMulti);

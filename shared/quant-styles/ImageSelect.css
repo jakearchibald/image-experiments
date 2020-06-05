@@ -3,6 +3,7 @@
 }
 
 .canvas {
+  image-rendering: optimizeSpeed;
   image-rendering: pixelated;
 }
 
