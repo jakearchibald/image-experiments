@@ -19,6 +19,28 @@ input[type='file'] {
 .app {
   height: 100%;
   display: grid;
+  position: relative;
+
+  &::after {
+    content: 'Drop it!';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    background: #ccc;
+    font-weight: bold;
+    font-size: 12vw;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease-in-out;
+  }
+  &:global(.drop-valid)::after {
+    opacity: 1;
+  }
 }
 
 .layout {

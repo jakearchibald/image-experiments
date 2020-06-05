@@ -11,3 +11,18 @@
  * limitations under the License.
  */
 /// <reference path="../missing-types.d.ts" />
+import { FileDropEvent, FileDropElement } from './file-drop';
+import { JSXInternal as PreactJSX } from 'preact/src/jsx';
+
+declare module 'preact' {
+  namespace JSXInternal {
+    interface IntrinsicElements extends PreactJSX.IntrinsicElements {
+      'file-drop': FileDropAttributes;
+    }
+  }
+}
+
+interface FileDropAttributes extends PreactJSX.HTMLAttributes {
+  accept?: string;
+  onfiledrop?: (this: FileDropElement, ev: FileDropEvent) => void;
+}

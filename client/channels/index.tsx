@@ -10,6 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import '../file-drop';
 import { h, Component, render, createRef } from 'preact';
 import ChromaCanvas from './ChromaCanvas';
 import Controls, { Values } from './Controls';
@@ -19,6 +20,7 @@ import {
   $canvasContainer,
 } from 'shared/channels-styles/App.css';
 import * as demoImages from '../imgs';
+import { FileDropEvent } from '../file-drop';
 
 const demos = new Map<string, string>(Object.entries(demoImages));
 const urlParams = new URLSearchParams(location.search);
@@ -123,6 +125,10 @@ class App extends Component<{}, State> {
     this._openFile(input.files[0]);
   };
 
+  private _onDrop = async (event: FileDropEvent) => {
+    this._openFile(event.files[0]);
+  };
+
   private _onResize = () => {
     clearTimeout(this._resizeTimeout);
 
@@ -209,7 +215,7 @@ class App extends Component<{}, State> {
     }: State,
   ) {
     return (
-      <div class={$app}>
+      <file-drop class={$app} accept="image/*" onfiledrop={this._onDrop}>
         <div class={$layout}>
           <div class={$canvasContainer} ref={this._canvasContainerRef}>
             {resizedBmp && lumaBmp && chromaBmp && (
@@ -240,7 +246,7 @@ class App extends Component<{}, State> {
         {!hideUi && (
           <input type="file" accept="image/*" onChange={this._onFileChange} />
         )}
-      </div>
+      </file-drop>
     );
   }
 }
