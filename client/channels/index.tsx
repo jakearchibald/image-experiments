@@ -72,6 +72,9 @@ interface ResizeOptions {
   height?: number;
 }
 
+// This seems to look better
+const smoothingQuality = 'medium';
+
 async function resize(
   bmp: Canvasable,
   { width, height }: ResizeOptions = {},
@@ -81,12 +84,12 @@ async function resize(
     if (width !== undefined) {
       return createImageBitmap(bmp, {
         resizeWidth: Math.round(width) || 1,
-        resizeQuality: 'high',
+        resizeQuality: smoothingQuality,
       });
     } else if (height !== undefined) {
       return createImageBitmap(bmp, {
         resizeHeight: Math.round(height) || 1,
-        resizeQuality: 'high',
+        resizeQuality: smoothingQuality,
       });
     } else {
       throw Error('Must specify width or height');
@@ -112,7 +115,7 @@ async function resize(
   canvas.height = targetHeight;
   const ctx = canvas.getContext('2d')!;
   ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingQuality = smoothingQuality;
   ctx.drawImage(bmp, 0, 0, targetWidth, targetHeight);
   return canvas;
 }
