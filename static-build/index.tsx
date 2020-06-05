@@ -15,17 +15,15 @@ import { h } from 'preact';
 import { renderPage, writeFiles } from './utils';
 import ChannelsIndex from './pages/channels/index';
 import QuantPage from './pages/quant';
-import AlteredPage from './pages/altered';
-import DemoPage from './pages/demo';
+import IndexPage from './pages/index';
 
 interface Output {
   [outputPath: string]: string;
 }
 const toOutput: Output = {
+  'index.html': renderPage(<IndexPage />),
   'channels/index.html': renderPage(<ChannelsIndex />),
   'quant/index.html': renderPage(<QuantPage />),
-  'altered/index.html': renderPage(<AlteredPage />),
-  'demo/index.html': renderPage(<DemoPage />),
 };
 
 writeFiles(toOutput);

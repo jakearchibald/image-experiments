@@ -12,28 +12,29 @@
  */
 import { h, FunctionalComponent } from 'preact';
 import pageStyles from 'css-bundle:./styles.css';
-import imgURL from 'asset-url:./altered.jpg';
 
 interface Props {}
 
-const AlteredPage: FunctionalComponent<Props> = ({}: Props) => {
+const IndexPage: FunctionalComponent<Props> = ({}: Props) => {
   return (
     <html lang="en">
       <head>
-        <title>Altered image</title>
+        <title>Image experiments</title>
         <meta name="viewport" content="width=device-width, minimum-scale=1.0" />
         <link rel="stylesheet" href={pageStyles} />
       </head>
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `document.body.addEventListener('load', ({target}) => target.style.opacity = 1, true)`,
-          }}
-        ></script>
-        <img src={imgURL} width="1920" height="1080" style={{ opacity: 0 }} />
+        <ul>
+          <li>
+            <a href="channels/">YCrCb resizing</a>
+          </li>
+          <li>
+            <a href="quant/">DCT quantisation</a>
+          </li>
+        </ul>
       </body>
     </html>
   );
 };
 
-export default AlteredPage;
+export default IndexPage;
