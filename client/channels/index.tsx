@@ -146,6 +146,13 @@ async function getChannel(
     : resize(resizedBmp, { width: resizedBmp.width * factor });
 }
 
+interface UpdateOptions {
+  updateMain?: Blob;
+  updateResized?: boolean;
+  updateChroma?: boolean;
+  updateLuma?: boolean;
+}
+
 interface State {
   mainBmp?: Canvasable;
   resizedBmp?: Canvasable;
@@ -180,18 +187,31 @@ class App extends Component<{}, State> {
     }
   }
 
-  private async _openFile(blob: Blob) {
-    const mainBmp = await blobToImg(blob);
+  private async _update({
+    updateMain,
+    updateResized,
+    updateChroma,
+    updateLuma,
+  }: UpdateOptions = {}) {
+    const mainBmp = updateMain
+      ? await blobToImg(updateMain)
+      : this.state.mainBmp!;
     const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
-    const resizedBmp = await resizeToBounds(
-      mainBmp,
-      bounds.width * devicePixelRatio,
-      bounds.height * devicePixelRatio,
-    );
+    const resizedBmp = updateResized
+      ? await resizeToBounds(
+          mainBmp,
+          bounds.width * devicePixelRatio,
+          bounds.height * devicePixelRatio,
+        )
+      : this.state.resizedBmp!;
 
     const [lumaBmp, chromaBmp] = await Promise.all([
-      getChannel(resizedBmp, this.state.lumaMulti),
-      getChannel(resizedBmp, this.state.chromaMulti),
+      updateLuma
+        ? getChannel(resizedBmp, this.state.lumaMulti)
+        : this.state.lumaBmp!,
+      updateChroma
+        ? getChannel(resizedBmp, this.state.chromaMulti)
+        : this.state.chromaBmp!,
     ]);
 
     this.setState({
@@ -199,6 +219,15 @@ class App extends Component<{}, State> {
       resizedBmp,
       lumaBmp,
       chromaBmp,
+    });
+  }
+
+  private async _openFile(blob: Blob) {
+    this._update({
+      updateMain: blob,
+      updateResized: true,
+      updateChroma: true,
+      updateLuma: true,
     });
   }
 
@@ -218,22 +247,10 @@ class App extends Component<{}, State> {
     this._resizeTimeout = setTimeout(async () => {
       if (!this.state.mainBmp) return;
 
-      const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
-      const resizedBmp = await resizeToBounds(
-        this.state.mainBmp,
-        bounds.width * devicePixelRatio,
-        bounds.height * devicePixelRatio,
-      );
-
-      const [lumaBmp, chromaBmp] = await Promise.all([
-        getChannel(resizedBmp, this.state.lumaMulti),
-        getChannel(resizedBmp, this.state.chromaMulti),
-      ]);
-
-      this.setState({
-        resizedBmp,
-        lumaBmp,
-        chromaBmp,
+      this._update({
+        updateResized: true,
+        updateChroma: true,
+        updateLuma: true,
       });
     }, 100);
   };
@@ -265,21 +282,10 @@ class App extends Component<{}, State> {
     ) {
       clearTimeout(this._rangeTimeout);
       this._rangeTimeout = setTimeout(async () => {
-        let newLuma: ReturnType<typeof getChannel> | undefined;
-        let newChroma: ReturnType<typeof getChannel> | undefined;
-
-        if (state.lumaMulti !== oldState.lumaMulti) {
-          newLuma = getChannel(state.resizedBmp!, state.lumaMulti);
-        }
-        if (state.chromaMulti !== oldState.chromaMulti) {
-          newChroma = getChannel(state.resizedBmp!, state.chromaMulti);
-        }
-
-        const newState: Partial<State> = {};
-
-        if (newLuma) newState.lumaBmp = await newLuma;
-        if (newChroma) newState.chromaBmp = await newChroma;
-        this.setState(newState);
+        this._update({
+          updateChroma: state.chromaMulti !== oldState.chromaMulti,
+          updateLuma: state.lumaMulti !== oldState.lumaMulti,
+        });
       }, 20);
     }
   }
