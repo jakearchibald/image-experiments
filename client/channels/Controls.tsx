@@ -18,7 +18,11 @@ import {
   $toggles,
   $multiplier,
   $data,
+  $resizeMethod,
+  $extraOptions,
 } from 'shared/channels-styles/Controls.css';
+
+import { ResizeType } from './resize/resize';
 
 export interface Values {
   lumaMulti: number;
@@ -26,6 +30,7 @@ export interface Values {
   showY: boolean;
   showCb: boolean;
   showCr: boolean;
+  resizeType: ResizeType;
 }
 
 interface Props extends Values {
@@ -40,6 +45,7 @@ export default class Controls extends Component<Props> {
   private _showYRef = createRef<HTMLInputElement>();
   private _showCbRef = createRef<HTMLInputElement>();
   private _showCrRef = createRef<HTMLInputElement>();
+  private _resizeTypeRef = createRef<HTMLSelectElement>();
 
   private _onChange = () => {
     this.props.onChange({
@@ -48,6 +54,7 @@ export default class Controls extends Component<Props> {
       showY: this._showYRef.current!.checked,
       showCb: this._showCbRef.current!.checked,
       showCr: this._showCrRef.current!.checked,
+      resizeType: this._resizeTypeRef.current!.value as ResizeType,
     });
   };
 
@@ -59,6 +66,7 @@ export default class Controls extends Component<Props> {
     showY,
     showCb,
     showCr,
+    resizeType,
   }: Props) {
     return (
       <div class={$controls}>
@@ -98,31 +106,47 @@ export default class Controls extends Component<Props> {
             {Math.round(height * chromaMulti) || 1}
           </span>
         </div>
-        <div class={$toggles}>
-          <label for="show-y">Y</label>
-          <input
-            ref={this._showYRef}
-            id="show-y"
-            type="checkbox"
-            checked={showY}
-            onInput={this._onChange}
-          />
-          <label for="show-cb">Cb</label>
-          <input
-            ref={this._showCbRef}
-            id="show-cb"
-            type="checkbox"
-            checked={showCb}
-            onInput={this._onChange}
-          />
-          <label for="show-cr">Cr</label>
-          <input
-            ref={this._showCrRef}
-            id="show-cr"
-            type="checkbox"
-            checked={showCr}
-            onInput={this._onChange}
-          />
+        <div class={$extraOptions}>
+          <div class={$resizeMethod}>
+            <label for="resize-method">Method:</label>
+            <select
+              ref={this._resizeTypeRef}
+              id="resize-method"
+              onInput={this._onChange}
+              value={resizeType}
+            >
+              <option value="triangle">Bilinear</option>
+              <option value="catrom">Catmull-Rom</option>
+              <option value="mitchell">Mitchell</option>
+              <option value="lanczos3">Lanczos3</option>
+            </select>
+          </div>
+          <div class={$toggles}>
+            <label for="show-y">Y</label>
+            <input
+              ref={this._showYRef}
+              id="show-y"
+              type="checkbox"
+              checked={showY}
+              onInput={this._onChange}
+            />
+            <label for="show-cb">Cb</label>
+            <input
+              ref={this._showCbRef}
+              id="show-cb"
+              type="checkbox"
+              checked={showCb}
+              onInput={this._onChange}
+            />
+            <label for="show-cr">Cr</label>
+            <input
+              ref={this._showCrRef}
+              id="show-cr"
+              type="checkbox"
+              checked={showCr}
+              onInput={this._onChange}
+            />
+          </div>
         </div>
       </div>
     );

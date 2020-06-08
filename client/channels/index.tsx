@@ -12,7 +12,7 @@
  */
 import '../file-drop';
 import { h, Component, render, createRef } from 'preact';
-import ChromaCanvas, { Canvasable } from './ChromaCanvas';
+import ChromaCanvas from './ChromaCanvas';
 import Controls, { Values } from './Controls';
 import {
   $layout,
@@ -21,6 +21,7 @@ import {
 } from 'shared/channels-styles/App.css';
 import * as demoImages from '../imgs';
 import { FileDropEvent } from '../file-drop';
+import { resize as wasmResize, ResizeType } from './resize/resize';
 
 const demos = new Map<string, string>(Object.entries(demoImages));
 const urlParams = new URLSearchParams(location.search);
@@ -29,21 +30,17 @@ const demoImg = demos.get(urlParams.get('demo') || '');
 const lumaDefault = Number(urlParams.get('l')) || 1;
 const chromaDefault = Number(urlParams.get('uv')) || 0.1;
 
-const supportsCreateImageBitmapResize = (async () => {
-  let readWidth = false;
-  const options = {
-    get resizeWidth() {
-      readWidth = true;
-      return 1;
-    },
-  };
-  try {
-    await createImageBitmap(new ImageData(2, 2), options);
-    return readWidth;
-  } catch {
-    return false;
-  }
-})();
+function getImageData(drawable: ImageBitmap | HTMLImageElement): ImageData {
+  // Make canvas same size as image
+  const canvas = document.createElement('canvas');
+  canvas.width = drawable.width;
+  canvas.height = drawable.height;
+  // Draw image onto canvas
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not create canvas context');
+  ctx.drawImage(drawable, 0, 0);
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
 
 async function decodeImage(url: string): Promise<HTMLImageElement> {
   const img = new Image();
@@ -70,80 +67,57 @@ async function blobToImg(blob: Blob): Promise<HTMLImageElement | ImageBitmap> {
 interface ResizeOptions {
   width?: number;
   height?: number;
+  type?: ResizeType;
 }
 
-// This seems to look better
-const smoothingQuality = 'medium';
-
 async function resize(
-  bmp: Canvasable,
-  { width, height }: ResizeOptions = {},
-): Promise<ImageBitmap | HTMLCanvasElement> {
-  // Happy path (Chrome)
-  if (await supportsCreateImageBitmapResize) {
-    if (width !== undefined) {
-      return createImageBitmap(bmp, {
-        resizeWidth: Math.round(width) || 1,
-        resizeQuality: smoothingQuality,
-      });
-    } else if (height !== undefined) {
-      return createImageBitmap(bmp, {
-        resizeHeight: Math.round(height) || 1,
-        resizeQuality: smoothingQuality,
-      });
-    } else {
-      throw Error('Must specify width or height');
-    }
-  }
-
-  // Sad path
+  img: ImageData,
+  { width, height, type = 'lanczos3' }: ResizeOptions = {},
+): Promise<ImageData> {
   let targetWidth: number;
   let targetHeight: number;
 
   if (width !== undefined) {
     targetWidth = Math.round(width) || 1;
-    targetHeight = Math.round((bmp.height * width) / bmp.width) || 1;
+    targetHeight = Math.round((img.height * width) / img.width) || 1;
   } else if (height !== undefined) {
     targetHeight = Math.round(height) || 1;
-    targetWidth = Math.round((bmp.width * height) / bmp.height) || 1;
+    targetWidth = Math.round((img.width * height) / img.height) || 1;
   } else {
     throw Error('Must specify width or height');
   }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const ctx = canvas.getContext('2d')!;
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = smoothingQuality;
-  ctx.drawImage(bmp, 0, 0, targetWidth, targetHeight);
-  return canvas;
+  return wasmResize(img, targetWidth, targetHeight, type);
 }
 
-async function resizeToBounds<T extends Canvasable>(
-  bmp: T,
+async function resizeToBounds(
+  img: ImageData,
   width: number,
   height: number,
-): Promise<ImageBitmap | HTMLCanvasElement | T> {
-  if (bmp.width <= width && bmp.height <= height) return bmp;
+): Promise<ImageData> {
+  if (img.width <= width && img.height <= height) return img;
 
-  const imgRatio = bmp.width / bmp.height;
+  const imgRatio = img.width / img.height;
   const boundRatio = width / height;
 
   if (imgRatio > boundRatio) {
-    return resize(bmp, { width });
+    return resize(img, { width });
   }
 
-  return resize(bmp, { height });
+  return resize(img, { height });
 }
 
 async function getChannel(
-  resizedBmp: Canvasable,
+  resizedImg: ImageData,
   factor: number,
-): Promise<Canvasable> {
+  resizeType: ResizeType,
+): Promise<ImageData> {
   return factor === 1
-    ? resizedBmp
-    : resize(resizedBmp, { width: resizedBmp.width * factor });
+    ? resizedImg
+    : resize(resizedImg, {
+        width: resizedImg.width * factor,
+        type: resizeType,
+      });
 }
 
 interface UpdateOptions {
@@ -154,15 +128,16 @@ interface UpdateOptions {
 }
 
 interface State {
-  mainBmp?: Canvasable;
-  resizedBmp?: Canvasable;
-  lumaBmp?: Canvasable;
-  chromaBmp?: Canvasable;
+  mainBmp?: ImageData;
+  resizedBmp?: ImageData;
+  lumaBmp?: ImageData;
+  chromaBmp?: ImageData;
   lumaMulti: number;
   chromaMulti: number;
   showY: boolean;
   showCb: boolean;
   showCr: boolean;
+  resizeType: ResizeType;
 }
 
 class App extends Component<{}, State> {
@@ -172,11 +147,13 @@ class App extends Component<{}, State> {
     showY: true,
     showCb: true,
     showCr: true,
+    resizeType: 'lanczos3',
   };
 
   private _resizeTimeout: number = 0;
   private _rangeTimeout: number = 0;
   private _canvasContainerRef = createRef<HTMLDivElement>();
+  private _updateController?: AbortController;
 
   constructor() {
     super();
@@ -193,9 +170,16 @@ class App extends Component<{}, State> {
     updateChroma,
     updateLuma,
   }: UpdateOptions = {}) {
+    if (this._updateController) this._updateController.abort();
+    this._updateController = new AbortController();
+    const { signal } = this._updateController;
+
     const mainBmp = updateMain
-      ? await blobToImg(updateMain)
+      ? getImageData(await blobToImg(updateMain))
       : this.state.mainBmp!;
+
+    if (signal.aborted) return;
+
     const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
     const resizedBmp = updateResized
       ? await resizeToBounds(
@@ -205,14 +189,18 @@ class App extends Component<{}, State> {
         )
       : this.state.resizedBmp!;
 
+    if (signal.aborted) return;
+
     const [lumaBmp, chromaBmp] = await Promise.all([
       updateLuma
-        ? getChannel(resizedBmp, this.state.lumaMulti)
+        ? getChannel(resizedBmp, this.state.lumaMulti, this.state.resizeType)
         : this.state.lumaBmp!,
       updateChroma
-        ? getChannel(resizedBmp, this.state.chromaMulti)
+        ? getChannel(resizedBmp, this.state.chromaMulti, this.state.resizeType)
         : this.state.chromaBmp!,
     ]);
+
+    if (signal.aborted) return;
 
     this.setState({
       mainBmp,
@@ -262,6 +250,7 @@ class App extends Component<{}, State> {
       showY: values.showY,
       showCb: values.showCb,
       showCr: values.showCr,
+      resizeType: values.resizeType,
     });
   };
 
@@ -274,17 +263,18 @@ class App extends Component<{}, State> {
   }
 
   componentDidUpdate(_: {}, oldState: State) {
-    const state = { ...this.state };
+    const resizeChanged = this.state.resizeType !== oldState.resizeType;
+    const updateChroma =
+      resizeChanged || this.state.chromaMulti !== oldState.chromaMulti;
+    const updateLuma =
+      resizeChanged || this.state.lumaMulti !== oldState.lumaMulti;
 
-    if (
-      state.lumaMulti !== oldState.lumaMulti ||
-      state.chromaMulti !== oldState.chromaMulti
-    ) {
+    if (updateChroma || updateLuma) {
       clearTimeout(this._rangeTimeout);
-      this._rangeTimeout = setTimeout(async () => {
+      this._rangeTimeout = setTimeout(() => {
         this._update({
-          updateChroma: state.chromaMulti !== oldState.chromaMulti,
-          updateLuma: state.lumaMulti !== oldState.lumaMulti,
+          updateChroma,
+          updateLuma,
         });
       }, 20);
     }
@@ -301,6 +291,7 @@ class App extends Component<{}, State> {
       showY,
       showCb,
       showCr,
+      resizeType,
     }: State,
   ) {
     return (
@@ -329,6 +320,7 @@ class App extends Component<{}, State> {
               showY={showY}
               showCb={showCb}
               showCr={showCr}
+              resizeType={resizeType}
             />
           )}
         </div>
