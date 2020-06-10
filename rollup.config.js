@@ -23,13 +23,11 @@ import assetStringPlugin from './lib/asset-string-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import runScript from './lib/run-script';
 
+const publicPath =
+  process.env.NODE_ENV === 'production' ? '/image-experiments/' : '/';
+
 function resolveFileUrl({ fileName }) {
-  return JSON.stringify(
-    fileName.replace(
-      /^static\//,
-      process.env.NODE_ENV === 'production' ? '/image-experiments/' : '/',
-    ),
-  );
+  return JSON.stringify(fileName.replace(/^static\//, publicPath));
 }
 
 export default async function ({ watch }) {

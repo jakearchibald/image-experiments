@@ -22,7 +22,7 @@ import {
   $extraOptions,
 } from 'shared/channels-styles/Controls.css';
 
-import { ResizeType } from './resize/resize';
+import { ResizeType } from '../App/resize';
 
 export interface Values {
   lumaMulti: number;
