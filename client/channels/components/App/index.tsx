@@ -21,13 +21,16 @@ import {
   $canvasContainer,
 } from 'shared/channels-styles/App.css';
 import * as demoImages from 'client/imgs';
-import { ResizeType } from './resize';
+import { ResizeType } from 'client-worker/resize';
 import {
   getImageData,
   blobToImg,
   resizeToBounds,
   resizeByFactor,
-} from './utils';
+  asyncResize1,
+  asyncResize2,
+} from './img-utils';
+import { abortable } from './utils';
 
 const demos = new Map<string, string>(Object.entries(demoImages));
 const urlParams = new URLSearchParams(location.search);
@@ -90,48 +93,52 @@ export default class App extends Component<{}, State> {
     this._updateController = new AbortController();
     const { signal } = this._updateController;
 
-    const mainBmp = updateMain
-      ? getImageData(await blobToImg(updateMain))
-      : this.state.mainBmp!;
+    try {
+      const mainBmp = updateMain
+        ? getImageData(await abortable(signal, blobToImg(updateMain)))
+        : this.state.mainBmp!;
 
-    if (signal.aborted) return;
-
-    const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
-    const resizedBmp = updateResized
-      ? await resizeToBounds(
-          mainBmp,
-          bounds.width * devicePixelRatio,
-          bounds.height * devicePixelRatio,
-        )
-      : this.state.resizedBmp!;
-
-    if (signal.aborted) return;
-
-    const [lumaBmp, chromaBmp] = await Promise.all([
-      updateLuma
-        ? resizeByFactor(
-            resizedBmp,
-            this.state.lumaMulti,
-            this.state.resizeType,
+      const bounds = this._canvasContainerRef.current!.getBoundingClientRect();
+      const resizedBmp = updateResized
+        ? await resizeToBounds(
+            signal,
+            mainBmp,
+            bounds.width * devicePixelRatio,
+            bounds.height * devicePixelRatio,
           )
-        : this.state.lumaBmp!,
-      updateChroma
-        ? resizeByFactor(
-            resizedBmp,
-            this.state.chromaMulti,
-            this.state.resizeType,
-          )
-        : this.state.chromaBmp!,
-    ]);
+        : this.state.resizedBmp!;
 
-    if (signal.aborted) return;
+      const [lumaBmp, chromaBmp] = await Promise.all([
+        updateLuma
+          ? resizeByFactor(
+              signal,
+              resizedBmp,
+              this.state.lumaMulti,
+              this.state.resizeType,
+              asyncResize1,
+            )
+          : this.state.lumaBmp!,
+        updateChroma
+          ? resizeByFactor(
+              signal,
+              resizedBmp,
+              this.state.chromaMulti,
+              this.state.resizeType,
+              asyncResize2,
+            )
+          : this.state.chromaBmp!,
+      ]);
 
-    this.setState({
-      mainBmp,
-      resizedBmp,
-      lumaBmp,
-      chromaBmp,
-    });
+      this.setState({
+        mainBmp,
+        resizedBmp,
+        lumaBmp,
+        chromaBmp,
+      });
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      throw err;
+    }
   }
 
   private async _openFile(blob: Blob) {

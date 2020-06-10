@@ -78,7 +78,7 @@ const types = {
 
 export type ResizeType = keyof typeof types;
 
-export async function resize(
+async function resize(
   inputImage: ImageData,
   outputWidth: number,
   outputHeight: number,
@@ -105,3 +105,27 @@ export async function resize(
   wasm.__wbindgen_free(r0, r1 * 1);
   return img;
 }
+
+export type ResizeArgs = Parameters<typeof resize>;
+
+export interface ResizeMessageData {
+  id: number;
+  action: 'resize';
+  args: ResizeArgs;
+}
+
+export interface ResizeResponse {
+  id: number;
+  result: ImageData;
+}
+
+addEventListener('message', async (event) => {
+  if (event.data.action !== 'resize') return;
+  const data = event.data as ResizeMessageData;
+  const result = await resize(...data.args);
+  const response: ResizeResponse = {
+    id: data.id,
+    result,
+  };
+  postMessage(response);
+});

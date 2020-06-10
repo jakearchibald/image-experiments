@@ -21,6 +21,7 @@ import cssPlugin from './lib/css-plugin';
 import assetPlugin from './lib/asset-plugin';
 import assetStringPlugin from './lib/asset-string-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
+import entryURLPlugin from './lib/entry-url-plugin';
 import runScript from './lib/run-script';
 
 const publicPath =
@@ -36,7 +37,13 @@ export default async function ({ watch }) {
   const tsPluginInstance = simpleTS('static-build', { watch });
   const commonPlugins = () => [
     tsPluginInstance,
-    resolveDirsPlugin(['static-build', 'client', 'tests', 'shared']),
+    resolveDirsPlugin([
+      'static-build',
+      'client',
+      'tests',
+      'shared',
+      'client-worker',
+    ]),
     assetPlugin(),
     assetStringPlugin(),
     cssPlugin(),
@@ -62,6 +69,7 @@ export default async function ({ watch }) {
           plugins: [
             { resolveFileUrl },
             ...commonPlugins(),
+            entryURLPlugin(),
             resolve(),
             terser({ module: true }),
           ],
