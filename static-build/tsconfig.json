@@ -4,5 +4,9 @@
     "lib": ["esnext", "dom"],
     "types": ["node"]
   },
-  "references": [{ "path": "../client" }, { "path": "../shared" }]
+  "references": [
+    { "path": "../client" },
+    { "path": "../client-worker" },
+    { "path": "../shared" }
+  ]
 }

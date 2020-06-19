@@ -37,16 +37,11 @@ export default async function ({ watch }) {
   const tsPluginInstance = simpleTS('static-build', { watch });
   const commonPlugins = () => [
     tsPluginInstance,
-    resolveDirsPlugin([
-      'static-build',
-      'client',
-      'tests',
-      'shared',
-      'client-worker',
-    ]),
+    resolveDirsPlugin(['static-build', 'client', 'shared', 'client-worker']),
     assetPlugin(),
     assetStringPlugin(),
     cssPlugin(),
+    entryURLPlugin(),
   ];
   const dir = '.tmp/build';
   const staticPath = 'static/[name]-[hash][extname]';
@@ -69,7 +64,6 @@ export default async function ({ watch }) {
           plugins: [
             { resolveFileUrl },
             ...commonPlugins(),
-            entryURLPlugin(),
             resolve(),
             terser({ module: true }),
           ],
