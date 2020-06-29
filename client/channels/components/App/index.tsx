@@ -19,8 +19,10 @@ import {
   $layout,
   $app,
   $canvasContainer,
+  $fileOptions,
 } from 'shared/channels-styles/App.css';
 import * as demoImages from 'client/imgs';
+import demoImageDescriptions from 'client/imgs/descriptions';
 import { ResizeType } from 'client-worker/resize';
 import {
   getImageData,
@@ -31,6 +33,7 @@ import {
   asyncResize2,
 } from './img-utils';
 import { abortable } from './utils';
+import NavSelect from 'client/NavSelect';
 
 const demos = new Map<string, string>(Object.entries(demoImages));
 const urlParams = new URLSearchParams(location.search);
@@ -47,6 +50,7 @@ interface UpdateOptions {
 }
 
 interface State {
+  loading: boolean;
   mainBmp?: ImageData;
   resizedBmp?: ImageData;
   lumaBmp?: ImageData;
@@ -61,6 +65,7 @@ interface State {
 
 export default class App extends Component<{}, State> {
   state: State = {
+    loading: false,
     lumaMulti: lumaDefault,
     chromaMulti: chromaDefault,
     showY: true,
@@ -72,15 +77,12 @@ export default class App extends Component<{}, State> {
   private _resizeTimeout: number = 0;
   private _rangeTimeout: number = 0;
   private _canvasContainerRef = createRef<HTMLDivElement>();
+  private _fileInput = createRef<HTMLInputElement>();
   private _updateController?: AbortController;
 
   constructor() {
     super();
-    if (demoImg) {
-      fetch(demoImg)
-        .then((r) => r.blob())
-        .then((blob) => this._openFile(blob));
-    }
+    if (demoImg) this._loadImage(demoImg);
   }
 
   private async _update({
@@ -134,6 +136,7 @@ export default class App extends Component<{}, State> {
         resizedBmp,
         lumaBmp,
         chromaBmp,
+        loading: false,
       });
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -142,6 +145,7 @@ export default class App extends Component<{}, State> {
   }
 
   private async _openFile(blob: Blob) {
+    this.setState({ loading: true });
     this._update({
       updateMain: blob,
       updateResized: true,
@@ -185,6 +189,21 @@ export default class App extends Component<{}, State> {
     });
   };
 
+  private _loadImage(url: string) {
+    this.setState({ loading: true });
+    fetch(url)
+      .then((r) => r.blob())
+      .then((blob) => this._openFile(blob));
+  }
+
+  private _onDemoImgSelect = (value: string) => {
+    if (value) this._loadImage(value);
+  };
+
+  private _openFileClick = () => {
+    this._fileInput.current!.click();
+  };
+
   componentDidMount() {
     addEventListener('resize', this._onResize);
   }
@@ -214,6 +233,7 @@ export default class App extends Component<{}, State> {
   render(
     {},
     {
+      loading,
       resizedBmp,
       lumaBmp,
       chromaBmp,
@@ -229,7 +249,9 @@ export default class App extends Component<{}, State> {
       <file-drop class={$app} accept="image/*" onfiledrop={this._onDrop}>
         <div class={$layout}>
           <div class={$canvasContainer} ref={this._canvasContainerRef}>
-            {resizedBmp && lumaBmp && chromaBmp && (
+            {loading ? (
+              <div>…loading…</div>
+            ) : resizedBmp && lumaBmp && chromaBmp ? (
               <ChromaCanvas
                 chromaBmp={chromaBmp}
                 lumaBmp={lumaBmp}
@@ -239,6 +261,8 @@ export default class App extends Component<{}, State> {
                 showCb={showCb}
                 showCr={showCr}
               />
+            ) : (
+              false
             )}
           </div>
           {!hideUi && (
@@ -256,7 +280,21 @@ export default class App extends Component<{}, State> {
           )}
         </div>
         {!hideUi && (
-          <input type="file" accept="image/*" onChange={this._onFileChange} />
+          <div class={$fileOptions}>
+            <button onClick={this._openFileClick}>Open file</button>
+            <input
+              ref={this._fileInput}
+              type="file"
+              accept="image/*"
+              onChange={this._onFileChange}
+            />{' '}
+            <NavSelect onChange={this._onDemoImgSelect}>
+              <option value="">Or pick a demo</option>
+              {Object.entries(demoImageDescriptions).map(([title, url]) => (
+                <option value={url}>{title}</option>
+              ))}
+            </NavSelect>
+          </div>
         )}
       </file-drop>
     );

@@ -73,3 +73,13 @@ body {
     grid-area: 1/1;
   }
 }
+
+.file-options {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+
+  & input[type='file'] {
+    display: none;
+  }
+}

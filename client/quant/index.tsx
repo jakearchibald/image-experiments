@@ -10,18 +10,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { h, Component, render, Fragment } from 'preact';
+import { h, Component, render, Fragment, createRef } from 'preact';
 import '../file-drop';
 import { FileDropEvent } from '../file-drop';
 import http203Img from 'asset-url:./203.webp';
 import curveImg from 'asset-url:./curve.webp';
 import * as demoImages from '../imgs';
+import demoImageDescriptions from 'client/imgs/descriptions';
 import BlockRender from './BlockRender';
 import CompressedBlockRender from './CompressedBlockRender';
-import { $images, $app, $phases, $phase } from 'shared/quant-styles/App.css';
+import {
+  $images,
+  $app,
+  $phases,
+  $phase,
+  $fileOptions,
+} from 'shared/quant-styles/App.css';
 import Controls, { Values } from './Controls';
 import { dct, initQuantTables, inverseZigZag } from './jpeg-tools';
 import ImageSelect from './ImageSelect';
+import NavSelect from 'client/NavSelect';
 
 const params = new URLSearchParams(location.search);
 const demo = new Map<string, string>([
@@ -30,9 +38,16 @@ const demo = new Map<string, string>([
   ...Object.entries(demoImages),
 ]);
 
+const demoOptions = {
+  ...demoImageDescriptions,
+  [`203 'pixel art'`]: http203Img,
+  'Curve block': curveImg,
+};
+
 const initalImage = demo.get(params.get('demo') || '');
 
 interface State {
+  loading: boolean;
   selectingImage?: ImageBitmap;
   data?: Uint8Array;
   dctData?: number[];
@@ -42,18 +57,24 @@ interface State {
 }
 
 class App extends Component<{}, State> {
+  private _fileInput = createRef<HTMLInputElement>();
+
   state: State = {
+    loading: false,
     quality: 100,
     phase: 63,
   };
 
   constructor() {
     super();
-    if (initalImage) {
-      fetch(initalImage)
-        .then((r) => r.blob())
-        .then((blob) => this._openFile(blob));
-    }
+    if (initalImage) this._loadImageURL(initalImage);
+  }
+
+  private _loadImageURL(url: string) {
+    this.setState({ loading: true });
+    fetch(url)
+      .then((r) => r.blob())
+      .then((blob) => this._openFile(blob));
   }
 
   private _updateDCT() {
@@ -82,6 +103,7 @@ class App extends Component<{}, State> {
     if (bmp.width > 8 || bmp.height > 8) {
       this.setState({
         selectingImage: bmp,
+        loading: false,
       });
       return;
     }
@@ -100,16 +122,14 @@ class App extends Component<{}, State> {
       data[i] = imageData.data[i * 4];
     }
 
-    this.setState({ data, selectingImage: undefined });
+    this.setState({ data, selectingImage: undefined, loading: false });
     this._updateDCT();
   }
 
   private _onFileChange = async (event: Event) => {
     const input = event.target as HTMLInputElement;
     if (!input.files || !input.files[0]) return;
-    this.setState({
-      selectingImage: await createImageBitmap(input.files[0]),
-    });
+    this._openFile(input.files[0]);
   };
 
   private _onSelect = (data: ImageData) => {
@@ -120,14 +140,45 @@ class App extends Component<{}, State> {
     this._openFile(event.files[0]);
   };
 
+  private _openFileClick = () => {
+    this._fileInput.current!.click();
+  };
+
+  private _onDemoImgSelect = (value: string) => {
+    if (value) this._loadImageURL(value);
+  };
+
   render(
     {},
-    { data, quality, phase, dctData, decodeTable, selectingImage }: State,
+    {
+      data,
+      quality,
+      phase,
+      dctData,
+      decodeTable,
+      selectingImage,
+      loading,
+    }: State,
   ) {
     return (
       <file-drop class={$app} accept="image/*" onfiledrop={this._onDrop}>
         {!data && !selectingImage ? (
-          <input type="file" accept="image/*" onChange={this._onFileChange} />
+          <div class={$fileOptions}>
+            <button onClick={this._openFileClick}>Open file</button>
+            <input
+              ref={this._fileInput}
+              type="file"
+              accept="image/*"
+              onChange={this._onFileChange}
+            />{' '}
+            <NavSelect onChange={this._onDemoImgSelect}>
+              <option value="">Or pick a demo</option>
+              {Object.entries(demoOptions).map(([title, url]) => (
+                <option value={url}>{title}</option>
+              ))}
+            </NavSelect>
+            {loading && ' …loading…'}
+          </div>
         ) : selectingImage ? (
           <ImageSelect onSelect={this._onSelect} image={selectingImage} />
         ) : (
