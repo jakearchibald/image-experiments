@@ -80,11 +80,6 @@ export default class App extends Component<{}, State> {
   private _fileInput = createRef<HTMLInputElement>();
   private _updateController?: AbortController;
 
-  constructor() {
-    super();
-    if (demoImg) this._loadImage(demoImg);
-  }
-
   private async _update({
     updateMain,
     updateResized,
@@ -206,6 +201,7 @@ export default class App extends Component<{}, State> {
 
   componentDidMount() {
     addEventListener('resize', this._onResize);
+    if (demoImg) this._loadImage(demoImg);
   }
 
   componentWillUnmount() {

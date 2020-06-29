@@ -65,8 +65,7 @@ class App extends Component<{}, State> {
     phase: 63,
   };
 
-  constructor() {
-    super();
+  componentDidMount() {
     if (initalImage) this._loadImageURL(initalImage);
   }
 
