@@ -50,15 +50,27 @@ function createProgram(
   return program;
 }
 
-function createTextureFromBitmap(gl: WebGLRenderingContext, img: ImageData) {
+function createTextureFromBitmap(
+  gl: WebGLRenderingContext,
+  img: ImageData,
+  smooth: boolean,
+) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // Set the parameters so we can render any size image.
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MIN_FILTER,
+    smooth ? gl.LINEAR : gl.NEAREST,
+  );
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MAG_FILTER,
+    smooth ? gl.LINEAR : gl.NEAREST,
+  );
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
   return texture;
@@ -72,6 +84,7 @@ interface Props {
   showY: boolean;
   showCr: boolean;
   showCb: boolean;
+  smoothChroma: boolean;
 }
 
 interface State {}
@@ -141,7 +154,11 @@ export default class ChromaCanvas extends Component<Props, State> {
       this._gl!.deleteTexture(this._lumaTexture);
     }
     this._gl!.activeTexture(this._gl!.TEXTURE0);
-    this._lumaTexture = createTextureFromBitmap(this._gl!, this.props.lumaBmp)!;
+    this._lumaTexture = createTextureFromBitmap(
+      this._gl!,
+      this.props.lumaBmp,
+      true,
+    )!;
     this._gl!.bindTexture(this._gl!.TEXTURE_2D, this._lumaTexture);
   }
 
@@ -153,6 +170,7 @@ export default class ChromaCanvas extends Component<Props, State> {
     this._chromaTexture = createTextureFromBitmap(
       this._gl!,
       this.props.chromaBmp,
+      this.props.smoothChroma,
     )!;
     this._gl!.bindTexture(this._gl!.TEXTURE_2D, this._chromaTexture);
   }
@@ -179,7 +197,10 @@ export default class ChromaCanvas extends Component<Props, State> {
       this._gl!.viewport(0, 0, this._gl!.canvas.width, this._gl!.canvas.height);
     }
 
-    if (previousProps.chromaBmp !== this.props.chromaBmp) {
+    if (
+      previousProps.chromaBmp !== this.props.chromaBmp ||
+      previousProps.smoothChroma !== this.props.smoothChroma
+    ) {
       redraw = true;
       this._updateChroma();
     }

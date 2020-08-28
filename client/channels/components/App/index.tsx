@@ -60,6 +60,7 @@ interface State {
   showY: boolean;
   showCb: boolean;
   showCr: boolean;
+  smoothCbCr: boolean;
   resizeType: ResizeType;
 }
 
@@ -71,6 +72,7 @@ export default class App extends Component<{}, State> {
     showY: true,
     showCb: true,
     showCr: true,
+    smoothCbCr: true,
     resizeType: 'lanczos3',
   };
 
@@ -180,6 +182,7 @@ export default class App extends Component<{}, State> {
       showY: values.showY,
       showCb: values.showCb,
       showCr: values.showCr,
+      smoothCbCr: values.smoothCbCr,
       resizeType: values.resizeType,
     });
   };
@@ -238,6 +241,7 @@ export default class App extends Component<{}, State> {
       showY,
       showCb,
       showCr,
+      smoothCbCr,
       resizeType,
     }: State,
   ) {
@@ -256,6 +260,7 @@ export default class App extends Component<{}, State> {
                 showY={showY}
                 showCb={showCb}
                 showCr={showCr}
+                smoothChroma={smoothCbCr}
               />
             ) : (
               false
@@ -271,6 +276,7 @@ export default class App extends Component<{}, State> {
               showY={showY}
               showCb={showCb}
               showCr={showCr}
+              smoothCbCr={smoothCbCr}
               resizeType={resizeType}
             />
           )}

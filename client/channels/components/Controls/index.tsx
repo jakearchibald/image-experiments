@@ -15,6 +15,7 @@ import { h, Component, createRef } from 'preact';
 import {
   $controls,
   $ranges,
+  $togglesRows,
   $toggles,
   $multiplier,
   $data,
@@ -30,6 +31,7 @@ export interface Values {
   showY: boolean;
   showCb: boolean;
   showCr: boolean;
+  smoothCbCr: boolean;
   resizeType: ResizeType;
 }
 
@@ -45,6 +47,7 @@ export default class Controls extends Component<Props> {
   private _showYRef = createRef<HTMLInputElement>();
   private _showCbRef = createRef<HTMLInputElement>();
   private _showCrRef = createRef<HTMLInputElement>();
+  private _smoothCbCr = createRef<HTMLInputElement>();
   private _resizeTypeRef = createRef<HTMLSelectElement>();
 
   private _onChange = () => {
@@ -54,6 +57,7 @@ export default class Controls extends Component<Props> {
       showY: this._showYRef.current!.checked,
       showCb: this._showCbRef.current!.checked,
       showCr: this._showCrRef.current!.checked,
+      smoothCbCr: this._smoothCbCr.current!.checked,
       resizeType: this._resizeTypeRef.current!.value as ResizeType,
     });
   };
@@ -66,6 +70,7 @@ export default class Controls extends Component<Props> {
     showY,
     showCb,
     showCr,
+    smoothCbCr,
     resizeType,
   }: Props) {
     return (
@@ -121,31 +126,47 @@ export default class Controls extends Component<Props> {
               <option value="lanczos3">Lanczos3</option>
             </select>
           </div>
-          <div class={$toggles}>
-            <label for="show-y">Y</label>
-            <input
-              ref={this._showYRef}
-              id="show-y"
-              type="checkbox"
-              checked={showY}
-              onInput={this._onChange}
-            />
-            <label for="show-cb">Cb</label>
-            <input
-              ref={this._showCbRef}
-              id="show-cb"
-              type="checkbox"
-              checked={showCb}
-              onInput={this._onChange}
-            />
-            <label for="show-cr">Cr</label>
-            <input
-              ref={this._showCrRef}
-              id="show-cr"
-              type="checkbox"
-              checked={showCr}
-              onInput={this._onChange}
-            />
+          <div class={$togglesRows}>
+            <div class={$toggles}>
+              <label>
+                <input
+                  ref={this._showYRef}
+                  type="checkbox"
+                  checked={showY}
+                  onInput={this._onChange}
+                />{' '}
+                Y
+              </label>{' '}
+              <label>
+                <input
+                  ref={this._showCbRef}
+                  type="checkbox"
+                  checked={showCb}
+                  onInput={this._onChange}
+                />{' '}
+                Cb
+              </label>{' '}
+              <label>
+                <input
+                  ref={this._showCrRef}
+                  type="checkbox"
+                  checked={showCr}
+                  onInput={this._onChange}
+                />{' '}
+                Cr
+              </label>
+            </div>
+            <div>
+              <label>
+                <input
+                  ref={this._smoothCbCr}
+                  type="checkbox"
+                  checked={smoothCbCr}
+                  onInput={this._onChange}
+                />{' '}
+                Smooth CbCr
+              </label>
+            </div>
           </div>
         </div>
       </div>
