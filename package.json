@@ -18,7 +18,7 @@
     "lodash.camelcase": "^4.3.0",
     "postcss": "^7.0.32",
     "postcss-import": "^12.0.1",
-    "postcss-modules": "^2.0.0",
+    "postcss-modules": "^6.0.0",
     "postcss-nested": "^4.2.1",
     "postcss-url": "^8.0.0",
     "preact": "^10.4.4",
